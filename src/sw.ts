@@ -1,7 +1,9 @@
 export function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch((error) => {
+      const baseUrl = new URL('.', window.location.href)
+      const swUrl = new URL('sw.js', baseUrl)
+      navigator.serviceWorker.register(swUrl.pathname).catch((error) => {
         console.error('Service worker registration failed', error)
       })
     })
