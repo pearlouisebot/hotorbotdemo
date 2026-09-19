@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { demoUserClips, people, type Person } from './data/people'
 
-type VoteStrength = 'clearly' | 'barely'
 type Side = 'A' | 'B'
 type Tab = 'compare' | 'matches' | 'you'
 type ScoreMap = Record<string, number>
@@ -121,13 +120,11 @@ function App() {
     const totalWins = Object.values(state.stats).reduce((sum, stat) => sum + stat.wins, 0)
     const totalLosses = Object.values(state.stats).reduce((sum, stat) => sum + stat.losses, 0)
     const picked = 68
-    const clearly = 47
-    const barely = 21
-    const passed = Math.max(0, 100 - clearly - barely)
+    const clearly = 61
+    const barely = 0
+    const passed = Math.max(0, 100 - clearly)
     const wins = totalWins || 1
-    const insight = clearly > barely
-      ? 'When you win, it is usually clearly. Strong reactions are beating lukewarm ones.'
-      : 'You are competitive in close calls. A stronger opening clip could turn more barely picks into clear ones.'
+    const insight = 'People tend to make fast decisions on you. The stronger first impression clip is doing most of the work.'
     return {
       picked,
       clearly,
@@ -159,13 +156,13 @@ function App() {
     setShowRatingStep(false)
   }
 
-  const recordVote = (winner: Person, loser: Person, strength: VoteStrength) => {
+  const recordVote = (winner: Person, loser: Person) => {
     setLastWinner(winner)
     setState((prev) => {
       const currentWinner = prev.scores[winner.id] ?? 1500
       const currentLoser = prev.scores[loser.id] ?? 1500
       const expWinner = expected(currentWinner, currentLoser)
-      const result = strength === 'clearly' ? 1 : 0.6
+      const result = 1
       const k = 32
       const nextWinner = currentWinner + k * (result - expWinner)
       const nextLoser = currentLoser + k * ((1 - result) - expected(currentLoser, currentWinner))
@@ -185,8 +182,8 @@ function App() {
           [winner.id]: {
             ...winnerStats,
             wins: winnerStats.wins + 1,
-            clearWins: winnerStats.clearWins + (strength === 'clearly' ? 1 : 0),
-            barelyWins: winnerStats.barelyWins + (strength === 'barely' ? 1 : 0),
+            clearWins: winnerStats.clearWins + 1,
+            barelyWins: winnerStats.barelyWins,
           },
           [loser.id]: {
             ...loserStats,
@@ -332,10 +329,8 @@ function App() {
 
               {!showReactionStep && !showRatingStep && (
                 <div className="mt-4 grid grid-cols-2 gap-3">
-                  <button onClick={() => recordVote(personA, personB, 'clearly')} className={`rounded-[22px] px-4 py-4 text-sm font-semibold ${accent}`}>A, clearly</button>
-                  <button onClick={() => recordVote(personB, personA, 'clearly')} className={`rounded-[22px] px-4 py-4 text-sm font-semibold ${accent}`}>B, clearly</button>
-                  <button onClick={() => recordVote(personA, personB, 'barely')} className="rounded-[22px] border border-border bg-panel px-4 py-4 text-sm font-semibold">A, barely</button>
-                  <button onClick={() => recordVote(personB, personA, 'barely')} className="rounded-[22px] border border-border bg-panel px-4 py-4 text-sm font-semibold">B, barely</button>
+                  <button onClick={() => recordVote(personA, personB)} className={`rounded-[22px] px-4 py-4 text-sm font-semibold ${accent}`}>Choose {personA.name}</button>
+                  <button onClick={() => recordVote(personB, personA)} className={`rounded-[22px] px-4 py-4 text-sm font-semibold ${accent}`}>Choose {personB.name}</button>
                 </div>
               )}
 
@@ -430,8 +425,8 @@ function App() {
                   </div>
                 </div>
                 <div className="mt-3 flex justify-between text-xs text-muted">
-                  <span>{yourStats.clearly}% clearly</span>
-                  <span>{yourStats.barely}% barely</span>
+                  <span>{yourStats.clearly}% picked</span>
+                  <span>{yourStats.barely}% lightly picked</span>
                   <span>{yourStats.passed}% passed</span>
                 </div>
               </div>
